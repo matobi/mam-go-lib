@@ -82,6 +82,20 @@ func TestOverwrite(t *testing.T) {
 	}
 }
 
+func TestProfile(t *testing.T) {
+	c := conf.NewConfig("profActive")
+	c.Add(conf.VtStr, "nameAll", "valueAll")
+	c.AddProfile(conf.VtStr, "profActive", "name", "valueActive")
+	c.AddProfile(conf.VtStr, "profInctive", "name", "valueInactive")
+
+	if "valueAll" != c.Str("nameAll") {
+		t.Errorf("value for global profile missing; exp=%s; got=%s", "valueAll", c.Str("nameAll"))
+	}
+	if "valueActive" != c.Str("name") {
+		t.Errorf("wrong value for active profile; exp=%s; got=%s", "valueActive", c.Str("name"))
+	}
+}
+
 func TestBadInt(t *testing.T) {
 	c := conf.NewConfig("")
 	c.Add(conf.VtInt, "int", "hello")
