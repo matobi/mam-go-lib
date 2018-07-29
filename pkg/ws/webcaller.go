@@ -12,24 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type WebError struct {
-	Cause  error
-	URL    string
-	Status int
-}
-
-func (e *WebError) Error() string {
-	msg := "cause is nil"
-	if e.Cause != nil {
-		msg = e.Cause.Error()
-	}
-	return fmt.Sprintf("error calling url; url=%s; status=%d; msg=%s", e.URL, e.Status, msg)
-}
-
-func NewWebError(cause error, url string, status int) *WebError {
-	return &WebError{Cause: cause, URL: url, Status: status}
-}
-
 const (
 	contentJSON = "application/json"
 	contentXML  = "application/xml"
@@ -42,7 +24,7 @@ type Caller struct {
 	user        string
 	pwd         string
 	headers     []keyValue
-	webErr      *WebError
+	//webErr      *WebError
 }
 
 type keyValue struct {
@@ -57,9 +39,9 @@ type input struct {
 
 func NewCaller(method, url string) *Caller {
 	return &Caller{
-		Method:  method,
-		URL:     url,
-		webErr:  nil,
+		Method: method,
+		URL:    url,
+		//webErr:  nil,
 		headers: []keyValue{},
 	}
 }
@@ -85,27 +67,29 @@ func (c *Caller) Auth(user, pwd string) *Caller {
 	return c
 }
 
-func (c *Caller) getInBuffer(in interface{}) (*bytes.Buffer, *WebError) {
+func (c *Caller) getInBuffer(in interface{}) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 	if in == nil {
 		return buf, nil
 	}
 	if c.contentType == contentJSON {
 		if err := json.NewEncoder(buf).Encode(in); err != nil {
-			return nil, NewWebError(errors.Wrapf(err, "failed encode json"), c.URL, http.StatusInternalServerError)
+			//return nil, errors.Wrapf() NewWebError(err, "failed encode json", c.URL, http.StatusInternalServerError)
+			return nil, errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed encode json")
 		}
 	} else if c.contentType == contentXML {
 		if err := xml.NewEncoder(buf).Encode(in); err != nil {
-			return nil, NewWebError(errors.Wrapf(err, "failed encode xml"), c.URL, http.StatusInternalServerError)
+			return nil, errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed encode xml")
+			//return nil, NewWebError(err, "failed encode xml", c.URL, http.StatusInternalServerError)
 		}
 	}
 	return buf, nil
 }
 
-func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) *WebError {
-	if c.webErr != nil {
-		return c.webErr
-	}
+func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) error {
+	//if c.webErr != nil {
+	//	return c.webErr
+	//}
 
 	buf, webErr := c.getInBuffer(in)
 	if webErr != nil {
@@ -114,7 +98,8 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) *Web
 
 	req, err := http.NewRequest(c.Method, c.URL, buf)
 	if err != nil {
-		return NewWebError(errors.Wrap(err, "failed to create request"), c.URL, http.StatusInternalServerError)
+		return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "ailed to create request")
+		//return NewWebError(errors.Wrap(err, "failed to create request"), c.URL, http.StatusInternalServerError)
 	}
 	if in != nil && c.contentType != "" {
 		req.Header.Set("Content-Type", c.contentType)
@@ -132,13 +117,16 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) *Web
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return NewWebError(errors.Wrap(err, "failed to call url"), c.URL, http.StatusBadGateway)
+		return errors.Wrapf(NewWebError(err, c.URL, http.StatusBadGateway), "failed to call url")
+		//return NewWebError(errors.Wrap(err, "failed to call url"), c.URL, http.StatusBadGateway)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		DiscardBody(resp)
-		// todo: log error
-		return NewWebError(errors.Errorf("error code response"), c.URL, resp.StatusCode)
+		// todo: log reply body
+		return errors.Wrapf(NewWebError(fmt.Errorf("http error code reply; code=%d", resp.StatusCode), c.URL, resp.StatusCode), "")
+		//return NewWebError(errors.Errorf("error code response"), c.URL, resp.StatusCode)
 	}
 
 	if out == nil {
@@ -148,16 +136,18 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) *Web
 
 	if c.contentType == contentXML {
 		if err := xml.NewDecoder(resp.Body).Decode(out); err != nil {
-			resp.Body.Close()
-			return NewWebError(errors.Wrapf(err, "failed decode response"), c.URL, http.StatusInternalServerError)
+			//resp.Body.Close()
+			return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed decode response")
+			//return NewWebError(errors.Wrapf(err, "failed decode response"), c.URL, http.StatusInternalServerError)
 		}
 	} else if c.contentType == contentJSON {
 		if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
-			resp.Body.Close()
-			return NewWebError(errors.Wrapf(err, "failed decode response"), c.URL, http.StatusInternalServerError)
+			//resp.Body.Close()
+			return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed decode response")
+			//return NewWebError(errors.Wrapf(err, "failed decode response"), c.URL, http.StatusInternalServerError)
 		}
 	}
-	resp.Body.Close()
+	//resp.Body.Close()
 	return nil
 }
 

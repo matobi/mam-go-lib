@@ -7,4 +7,4 @@ LDFLAGS = -extldflags -static -s -w
 #	rm -rf ./buildtarget/*
 
 test:
-	vgo test github.com/matobi/mam-go-lib/pkg/conf/test
+	go test github.com/matobi/mam-go-lib/pkg/conf/test
