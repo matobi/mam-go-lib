@@ -197,7 +197,7 @@ func CopyFile(src string, dest string) error {
 	if !IsFile(src) {
 		return errors.Errorf("CopyFile; source missing; %s", src)
 	}
-	if IsFile(dest) {
+	if PathExists(dest) {
 		return errors.Errorf("CopyFile; dest already exist; %s", dest)
 	}
 	destDir := path.Dir(dest)
@@ -211,7 +211,7 @@ func MoveFile(src string, dest string) error {
 	if !IsFile(src) {
 		return errors.Errorf("MoveFile; source missing; %s", src)
 	}
-	if IsFile(dest) {
+	if PathExists(dest) {
 		return errors.Errorf("MoveFile; dest already exist; %s", dest)
 	}
 	destDir := path.Dir(dest)
