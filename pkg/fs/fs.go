@@ -207,6 +207,20 @@ func CopyFile(src string, dest string) error {
 	return RunCmd("cp", []string{src, dest})
 }
 
+func MoveFile(src string, dest string) error {
+	if !IsFile(src) {
+		return errors.Errorf("MoveFile; source missing; %s", src)
+	}
+	if IsFile(dest) {
+		return errors.Errorf("MoveFile; dest already exist; %s", dest)
+	}
+	destDir := path.Dir(dest)
+	if !IsDir(destDir) {
+		return errors.Errorf("MoveFile; dest dir missing; %s", destDir)
+	}
+	return RunCmd("mv", []string{src, dest})
+}
+
 // LoadJSON Read json from file.
 func LoadJSON(f string, iface interface{}) error {
 	raw, err := ioutil.ReadFile(f)
