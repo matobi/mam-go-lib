@@ -123,7 +123,7 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 		req.Header.Set("Content-Type", c.contentType)
 	}
 	if out != nil && c.accept != "" {
-		req.Header.Set("Accept", c.contentType)
+		req.Header.Set("Accept", c.accept)
 	}
 	if c.user != "" || c.pwd != "" {
 		req.SetBasicAuth(c.user, c.pwd)
