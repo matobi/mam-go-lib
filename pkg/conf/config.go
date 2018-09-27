@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -43,14 +44,6 @@ func (c *Config) Add(t ValueType, name, value string) {
 }
 
 func (c *Config) AddProfile(t ValueType, profile, name, value string) {
-	// if name == "" {
-	// 	c.addErr(fmt.Errorf("propery name was nil; value=%s", value))
-	// 	return
-	// }
-	// if !c.isValidType(t, value) {
-	// 	c.addErr(fmt.Errorf("propery value invalid; name=%s; value=%s", name, value))
-	// 	return
-	// }
 	value, ok := c.validate(t, profile, name, value)
 	if !ok {
 		return
@@ -115,30 +108,10 @@ func (c *Config) isValidType(t ValueType, value string) bool {
 func (c *Config) envOverride(name, value string) string {
 	envValue, ok := os.LookupEnv(name)
 	if !ok {
-		fmt.Printf("envValue keep: %s\n", value)
 		return value
 	}
-	fmt.Printf("envValue ovr: %s\n", envValue)
 	return envValue
 }
-
-// func (c *Config) AddStr(name, value string) {
-// 	if name == "" {
-// 		c.addErr(fmt.Errorf("propery name was nil; value=%s", value))
-// 		return
-// 	}
-// 	c.Values[name] = value
-// 	log.Info().Str("name", name).Str("value", value).Msg("property str")
-// }
-
-// func (c *Config) AddDir(name, value string) {
-// 	if name == "" {
-// 		c.addErr(fmt.Errorf("propery name was nil; value=%s", value))
-// 		return
-// 	}
-// 	c.Values[name] = value
-// 	log.Info().Str("name", name).Str("value", value).Msg("property str")
-// }
 
 func (c *Config) AddStrProfile(profile, name, value string) {
 	if name == "" {
@@ -149,30 +122,7 @@ func (c *Config) AddStrProfile(profile, name, value string) {
 		return
 	}
 	c.Values[name] = value
-	log.Info().Str("name", name).Str("value", value).Msg("property str")
 }
-
-// func (c *Config) AddInt(name string, value int64) {
-// 	c.AddStr(name, strconv.FormatInt(value, 10))
-// }
-
-// func (c *Config) AddIntProfile(profile, name string, value int64) {
-// 	c.AddStrProfile(profile, name, strconv.FormatInt(value, 10))
-// }
-
-// func (c *Config) AddList(name, value string) {
-// 	if name == "" {
-// 		c.addErr(fmt.Errorf("propery name was nil; value=%s", value))
-// 		return
-// 	}
-// 	list, isFound := c.Lists[name]
-// 	if !isFound {
-// 		list = []string{}
-// 	}
-// 	list = append(list, value)
-// 	c.Lists[name] = list
-// 	log.Info().Str("name", name).Str("value", value).Msg("property list")
-// }
 
 func (c *Config) addErr(err error) {
 	c.Errors = append(c.Errors, err)
@@ -208,9 +158,8 @@ func (c *Config) Int(name string) int64 {
 
 func (c *Config) LogAndValidate() (*Config, error) {
 	for k, v := range c.Values {
-		fmt.Printf("property: %s = %s\n", k, v)
+		logNameValue(k, v)
 	}
-
 	for i := range c.Errors {
 		log.Error().Err(c.Errors[i]).Msg("bad config")
 	}
@@ -218,6 +167,14 @@ func (c *Config) LogAndValidate() (*Config, error) {
 		return c, c.Errors[0]
 	}
 	return c, nil
+}
+
+func logNameValue(name, value string) {
+	nameLower := strings.ToLower(name)
+	if strings.Contains(nameLower, "pwd") || strings.Contains(nameLower, "password") {
+		value = "***" // don't log passwords
+	}
+	log.Info().Str("name", name).Str("value", value).Msg("config")
 }
 
 func isDir(path string) bool {

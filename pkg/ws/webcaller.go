@@ -159,16 +159,12 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 			return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed decode response")
 		}
 	} else if c.accept == ContentPlain {
-		v, ok := out.(*string)
-		if ok {
+		if v, ok := out.(*string); ok {
 			buf, err := ioutil.ReadAll(resp.Body)
-			fmt.Printf("test/plain: buf=%s\n", buf)
 			if err != nil {
 				return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed read text/plain response")
 			}
 			*v = string(buf)
-			fmt.Printf("test/plain: *v=%s\n", *v)
-			fmt.Printf("test/plain: out=%s\n", out)
 		}
 	}
 	return nil
