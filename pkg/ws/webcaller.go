@@ -41,9 +41,8 @@ type input struct {
 
 func NewCaller(method, url string) *Caller {
 	return &Caller{
-		Method: method,
-		URL:    url,
-		//webErr:  nil,
+		Method:  method,
+		URL:     url,
 		headers: []keyValue{},
 	}
 }
@@ -79,11 +78,6 @@ func (c *Caller) Plain() *Caller {
 	c.accept = ContentPlain
 	return c
 }
-
-// func (c *Caller) PLAIN() *Caller {
-// 	c.contentType = contentPLAIN
-// 	return c
-// }
 
 func (c *Caller) Auth(user, pwd string) *Caller {
 	c.user = user

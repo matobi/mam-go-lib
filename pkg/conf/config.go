@@ -49,7 +49,6 @@ func (c *Config) AddProfile(t ValueType, profile, name, value string) {
 		return
 	}
 	c.Values[name] = value
-	log.Info().Str("name", name).Str("value", value).Msg("property str")
 }
 
 func (c *Config) AddList(t ValueType, name, value string) {

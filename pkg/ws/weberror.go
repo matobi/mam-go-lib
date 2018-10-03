@@ -6,10 +6,14 @@ import (
 )
 
 type WebError struct {
-	//Msg   string
 	Cause error
+	Msg   string
 	URL   string
 	Code  int
+}
+
+func NewWebErrorMsg(cause error, msg string, code int) error {
+	return &WebError{Cause: cause, Msg: msg, Code: code}
 }
 
 func NewWebError(cause error, url string, code int) error {
@@ -17,7 +21,7 @@ func NewWebError(cause error, url string, code int) error {
 }
 
 func (e *WebError) Error() string {
-	return fmt.Sprintf("error calling url; code=%d; url=%s; cause=%v", e.Code, e.URL, e.Cause)
+	return fmt.Sprintf("error calling url; code=%d; msg=%s; url=%s; cause=%v", e.Code, e.Msg, e.URL, e.Cause)
 }
 
 func (e *WebError) GetErrCode() int {
