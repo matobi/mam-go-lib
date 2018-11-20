@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -242,6 +243,22 @@ func SaveJSON(f string, iface interface{}) error {
 	content, err := json.MarshalIndent(iface, "", " ")
 	if err != nil {
 		return errors.Wrapf(err, "Failed marshal json; %s; %+v", f, iface)
+	}
+	if err := ioutil.WriteFile(f, content, 0644); err != nil {
+		return errors.Wrapf(err, "Faild to write file; %s", f)
+	}
+	return nil
+}
+
+// SaveJSON Writes a json stuct to file.
+func SaveXML(f string, iface interface{}) error {
+	if !PathExists(filepath.Dir(f)) {
+		return errors.Errorf("Missing dir; %s", f)
+	}
+
+	content, err := xml.MarshalIndent(iface, "", " ")
+	if err != nil {
+		return errors.Wrapf(err, "Failed marshal xml; %s; %+v", f, iface)
 	}
 	if err := ioutil.WriteFile(f, content, 0644); err != nil {
 		return errors.Wrapf(err, "Faild to write file; %s", f)
