@@ -250,7 +250,7 @@ func SaveJSON(f string, iface interface{}) error {
 	return nil
 }
 
-// SaveJSON Writes a json stuct to file.
+// SaveXML Writes a json stuct to file.
 func SaveXML(f string, iface interface{}) error {
 	if !PathExists(filepath.Dir(f)) {
 		return errors.Errorf("Missing dir; %s", f)
@@ -260,8 +260,21 @@ func SaveXML(f string, iface interface{}) error {
 	if err != nil {
 		return errors.Wrapf(err, "Failed marshal xml; %s; %+v", f, iface)
 	}
+	content = []byte(xml.Header + string(content))
 	if err := ioutil.WriteFile(f, content, 0644); err != nil {
 		return errors.Wrapf(err, "Faild to write file; %s", f)
+	}
+	return nil
+}
+
+// LoadJSON Read json from file.
+func LoadXML(f string, iface interface{}) error {
+	raw, err := ioutil.ReadFile(f)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read file; %s", f)
+	}
+	if err := xml.Unmarshal(raw, iface); err != nil {
+		return errors.Wrapf(err, "failed unmarshal json; %s", f)
 	}
 	return nil
 }
