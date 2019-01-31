@@ -25,14 +25,15 @@ type Caller struct {
 	accept      string
 	user        string
 	pwd         string
-	headers     []keyValue
+	headers     map[string]string
+	//outHeaders []keyValue
 	//webErr      *WebError
 }
 
-type keyValue struct {
-	key   string
-	value string
-}
+// type keyValue struct {
+// 	key   string
+// 	value string
+// }
 
 type input struct {
 	contentType string
@@ -43,13 +44,21 @@ func NewCaller(method, url string) *Caller {
 	return &Caller{
 		Method:  method,
 		URL:     url,
-		headers: []keyValue{},
+		headers: make(map[string]string),
 	}
 }
 
-func (c *Caller) Header(name, value string) *Caller {
-	c.headers = append(c.headers, keyValue{key: name, value: value})
+func (c *Caller) SetHeader(name, value string) *Caller {
+	//c.headers = append(c.headers, keyValue{key: name, value: value})
+	c.headers[name] = value
 	return c
+}
+
+func (c *Caller) GetHeader(name string) (string, bool) {
+	// c.headers = append(c.headers, keyValue{key: name, value: value})
+	v, found := c.headers[name]
+	return v, found
+	//return "", c.headers[name]
 }
 
 func (c *Caller) Accept(t string) *Caller {
@@ -122,9 +131,9 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 	if c.user != "" || c.pwd != "" {
 		req.SetBasicAuth(c.user, c.pwd)
 	}
-	for _, kv := range c.headers {
-		fmt.Printf("add header: %s=%s\n", kv.key, kv.value)
-		req.Header.Set(kv.key, kv.value)
+	for k, v := range c.headers {
+		fmt.Printf("add header: %s=%s\n", k, v)
+		req.Header.Set(k, v)
 	}
 
 	resp, err := client.Do(req)
@@ -132,6 +141,15 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 		return errors.Wrapf(NewWebError(err, c.URL, http.StatusBadGateway), "failed to call url")
 	}
 	defer resp.Body.Close()
+
+	// save out headers
+	for k, v := range resp.Header {
+		if len(v) != 1 {
+			continue // todo: currently only handles single value headers
+		}
+		c.headers[k] = v[0]
+		//c.headers = append(c.headers, keyValue{key: k, value: v[0]})
+	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		DiscardBody(resp)
