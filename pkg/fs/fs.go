@@ -376,7 +376,7 @@ func ChownR(path string, uid, gid int) error {
 // RunCmd Run command and use current proc stdout/stderr.
 func RunCmd(cmdName string, cmdArgs []string) error {
 	cmdLog := fmt.Sprintf("%s %s", cmdName, strings.Join(cmdArgs, " "))
-	log.Info().Str("cmd", cmdLog).Msg("will execute command")
+	//log.Info().Str("cmd", cmdLog).Msg("will execute command")
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout
@@ -393,7 +393,7 @@ func RunCmd(cmdName string, cmdArgs []string) error {
 // RunCmdWithOutput Run command and return stdout.
 func RunCmdWithOutput(cmdName string, cmdArgs []string) ([]byte, error) {
 	cmdLog := fmt.Sprintf("%s %s", cmdName, strings.Join(cmdArgs, " "))
-	log.Info().Str("cmd", cmdLog).Msg("will execute command")
+	//log.Info().Str("cmd", cmdLog).Msg("will execute command")
 
 	out, err := exec.Command(cmdName, cmdArgs...).Output()
 	if err != nil {
